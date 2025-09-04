@@ -16,4 +16,8 @@ public class OfficetelTransactionDto {
     private String monthlyRent;
     private String area;
     private String contractDate;
+    private String floor;
+    private String buildYear;
+    private String contractType;
+    private String contractTerm;
 }

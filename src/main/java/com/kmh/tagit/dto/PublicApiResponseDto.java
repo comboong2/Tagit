@@ -15,7 +15,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PublicApiResponseDto {
 
-    // body 필드를 다시 추가합니다.
+
     private Body body;
 
     @Getter
@@ -64,5 +64,18 @@ public class PublicApiResponseDto {
 
         @JacksonXmlProperty(localName = "umdNm")
         private String neighborhood; // 법정동
+
+        // 추가할 필드들
+        @JacksonXmlProperty(localName = "floor")
+        private String floor; // 층
+
+        @JacksonXmlProperty(localName = "buildYear")
+        private String buildYear; // 건축년도
+
+        @JacksonXmlProperty(localName = "contractType")
+        private String contractType; // 계약구분
+
+        @JacksonXmlProperty(localName = "contractTerm")
+        private String contractTerm; // 계약기간
     }
 }

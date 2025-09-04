@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
 import java.net.URI;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -43,30 +42,6 @@ public class OfficetelReportService {
         return allItems.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.groupingBy(OfficetelTransactionDto::getBuildingName));
-    }
-
-    // 전체 시세 메서드 (동별 시세) - 기존
-    public List<OfficetelMarketDataDto> getOfficetelMarketData(String lawdCd) {
-        List<PublicApiResponseDto.Item> allItems = new ArrayList<>();
-        YearMonth currentMonth = YearMonth.now();
-
-        for (int i = 0; i < 3; i++) {
-            YearMonth targetMonth = currentMonth.minusMonths(i);
-            String dealYmd = targetMonth.format(DateTimeFormatter.ofPattern("yyyyMM"));
-            List<PublicApiResponseDto.Item> monthlyItems = callApiAndParseXml(lawdCd, dealYmd);
-            if (monthlyItems != null) {
-                allItems.addAll(monthlyItems);
-            }
-        }
-
-        Map<String, List<PublicApiResponseDto.Item>> groupedByNeighborhood =
-                allItems.stream()
-                        .filter(item -> item.getNeighborhood() != null && !item.getNeighborhood().trim().isEmpty())
-                        .collect(Collectors.groupingBy(PublicApiResponseDto.Item::getNeighborhood));
-
-        return groupedByNeighborhood.entrySet().stream()
-                .map(entry -> calculateMarketData(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
     }
 
     // 전세 시세 데이터 - 새로 추가
@@ -123,42 +98,6 @@ public class OfficetelReportService {
         return groupedByNeighborhood.entrySet().stream()
                 .map(entry -> calculateMonthlyRentMarketData(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
-    }
-
-    // 전체 시세 계산 메서드 - 기존
-    private OfficetelMarketDataDto calculateMarketData(String neighborhood, List<PublicApiResponseDto.Item> items) {
-        List<Double> deposits = items.stream()
-                .map(item -> parseAmount(item.getDeposit()))
-                .filter(deposit -> deposit > 0)
-                .collect(Collectors.toList());
-
-        List<Double> monthlyRents = items.stream()
-                .map(item -> parseAmount(item.getMonthlyRent()))
-                .collect(Collectors.toList());
-
-        double avgDeposit = deposits.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        double avgMonthlyRent = monthlyRents.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-
-        double medianDeposit = calculateMedian(deposits);
-        double medianMonthlyRent = calculateMedian(monthlyRents);
-
-        String recentDate = items.stream()
-                .map(item -> String.format("%d-%02d-%02d", item.getYear(), item.getMonth(), item.getDay()))
-                .max(String::compareTo)
-                .orElse("N/A");
-
-        String district = items.isEmpty() ? "N/A" : items.get(0).getDistrict();
-
-        return new OfficetelMarketDataDto(
-                neighborhood,
-                district,
-                Math.round(avgDeposit * 100.0) / 100.0,
-                Math.round(avgMonthlyRent * 100.0) / 100.0,
-                Math.round(medianDeposit * 100.0) / 100.0,
-                Math.round(medianMonthlyRent * 100.0) / 100.0,
-                items.size(),
-                recentDate
-        );
     }
 
     // 전세 시세 계산 메서드 - 새로 추가
@@ -288,7 +227,11 @@ public class OfficetelReportService {
                 item.getDeposit() != null ? item.getDeposit().trim() : "0",
                 item.getMonthlyRent() != null ? item.getMonthlyRent().trim() : "0",
                 String.valueOf(item.getArea()),
-                contractDate
+                contractDate,
+                item.getFloor() != null ? item.getFloor().trim() : "N/A",
+                item.getBuildYear() != null ? item.getBuildYear().trim() : "N/A",
+                item.getContractType() != null ? item.getContractType().trim() : "N/A",
+                item.getContractTerm() != null ? item.getContractTerm().trim() : "N/A"
         );
     }
 }
