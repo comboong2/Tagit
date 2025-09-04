@@ -1,6 +1,7 @@
 package com.kmh.tagit.controller;
 
 import com.kmh.tagit.dto.OfficetelTransactionDto;
+import com.kmh.tagit.dto.OfficetelMarketDataDto;
 import com.kmh.tagit.service.OfficetelReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class OfficetelReportController {
 
     private final OfficetelReportService officetelReportService;
 
-    // 👇 이 API의 응답(produces)은 반드시 UTF-8 인코딩의 JSON 타입이라고 명시합니다.
+    // 기존 API (건물별 거래 내역) - 유지
     @GetMapping(value = "/rent-data", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Map<String, List<OfficetelTransactionDto>>> getRentData(
             @RequestParam("lawdCd") String lawdCd) {
@@ -32,7 +33,42 @@ public class OfficetelReportController {
             Map<String, List<OfficetelTransactionDto>> data = officetelReportService.getOfficetelRentData(lawdCd);
             return ResponseEntity.ok(data);
         } catch (Exception e) {
-            // 서버 내부 오류 발생 시에도 어떤 에러인지 콘솔에 출력하도록 추가
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // 전세 시세 API
+    @GetMapping(value = "/jeonse-market", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<List<OfficetelMarketDataDto>> getJeonseMarket(
+            @RequestParam("lawdCd") String lawdCd) {
+
+        if (lawdCd == null || lawdCd.length() != 5) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            List<OfficetelMarketDataDto> data = officetelReportService.getJeonseMarketData(lawdCd);
+            return ResponseEntity.ok(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // 월세 시세 API
+    @GetMapping(value = "/monthly-rent-market", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<List<OfficetelMarketDataDto>> getMonthlyRentMarket(
+            @RequestParam("lawdCd") String lawdCd) {
+
+        if (lawdCd == null || lawdCd.length() != 5) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            List<OfficetelMarketDataDto> data = officetelReportService.getMonthlyRentMarketData(lawdCd);
+            return ResponseEntity.ok(data);
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
