@@ -58,5 +58,11 @@ public class PublicApiResponseDto {
 
         @JacksonXmlProperty(localName = "dealDay")
         private int day;
+
+        @JacksonXmlProperty(localName = "sggNm")
+        private String district; // 시군구
+
+        @JacksonXmlProperty(localName = "umdNm")
+        private String neighborhood; // 법정동
     }
 }
